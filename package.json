@@ -1,13 +1,14 @@
 {
   "name": "rollup-plugin-oxc",
   "version": "0.0.0",
-  "description": "A Rollup plugin to transform TypeScript and generate type declarations with oxc-transform.",
+  "description": "A Rollup plugin to transform, minify TypeScript and generate type declarations with oxc-transform.",
   "type": "module",
   "scripts": {
     "build": "node build.ts"
   },
   "dependencies": {
     "@rollup/pluginutils": "^5.2.0",
+    "oxc-minify": "^0.75.1",
     "oxc-resolver": "^11.4.0",
     "oxc-transform": "^0.75.1"
   },

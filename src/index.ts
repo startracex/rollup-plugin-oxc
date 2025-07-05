@@ -3,6 +3,7 @@ import { ResolverFactory } from "oxc-resolver";
 import { dirname, extname, relative, resolve } from "node:path";
 import { createFilter, type FilterPattern } from "@rollup/pluginutils";
 import type { Plugin } from "rollup";
+import { minify } from "oxc-minify";
 
 type MigrateOptions = Partial<{
   extensions: string[];
@@ -11,8 +12,9 @@ type MigrateOptions = Partial<{
   emitDecoratorMetadata: boolean;
   declaration: boolean;
   declarationMap: boolean;
-  target: TransformOptions["target"];
+  target: string;
   jsx: TransformOptions["jsx"];
+  minify: boolean;
   include: FilterPattern;
   exclude: FilterPattern;
 }>;
@@ -95,6 +97,21 @@ export default function oxc({ include, exclude, experimentalDecorators, emitDeco
           }
         }
       }
+    },
+    renderChunk(code, chunk) {
+      if (!options.minify) {
+        return null;
+      }
+      return minify(chunk.fileName, code, {
+        compress: {
+          target: options.target as any,
+          keepNames: {
+            function: false,
+            class: true,
+          },
+        },
+        sourcemap: true,
+      });
     },
   };
 }
