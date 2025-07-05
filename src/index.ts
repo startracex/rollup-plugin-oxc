@@ -5,7 +5,7 @@ import { createFilter, type FilterPattern } from "@rollup/pluginutils";
 import type { Plugin } from "rollup";
 import { minify } from "oxc-minify";
 
-type MigrateOptions = Partial<{
+export type MigrateOptions = Partial<{
   extensions: string[];
   rewriteImportExtensions: boolean;
   experimentalDecorators: boolean;
