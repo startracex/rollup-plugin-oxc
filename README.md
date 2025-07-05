@@ -1,6 +1,6 @@
 # rollup-plugin-oxc
 
-A Rollup plugin to transform, minify TypeScript and generate type declarations with oxc-transform.
+A Rollup plugin to transform, minify TypeScript and generate type declarations with oxc.
 
 Usage:
 
