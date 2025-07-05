@@ -18,8 +18,8 @@ const defaultMinifyOptions = {
 
 export type Options = Partial<{
   tsconfigCompilerOptions: CompilerOptions;
-  transform: TransformOptions;
-  resolve: NapiResolveOptions;
+  transform: false | TransformOptions;
+  resolve: false | NapiResolveOptions;
   minify: boolean | MinifyOptions;
   include: FilterPattern;
   exclude: FilterPattern;
@@ -28,34 +28,42 @@ export type Options = Partial<{
 export default function oxc({
   include,
   exclude,
-  resolve = {},
+  resolve: resolveOptions = {},
   tsconfigCompilerOptions = {},
   transform: transformOptions = {},
   ...options
 }: Options = {}): Plugin {
   const filter = createFilter(include, exclude);
+  let rf: ResolverFactory;
+  if (resolveOptions !== false) {
+    resolveOptions.extensions ??= [".ts", ".js", ".tsx", ".jsx", ".mts", ".mjs", ".cts", ".cjs"];
+    rf = new ResolverFactory(resolveOptions);
+  }
 
-  resolve.extensions ??= [".ts", ".js", ".tsx", ".jsx", ".mts", ".mjs", ".cts", ".cjs"];
-  const rf = new ResolverFactory(resolve);
   const migratedOptions = migrate(Object.assign(tsconfigCompilerOptions, options));
-  transformOptions = {
-    ...migratedOptions,
-    sourcemap: migratedOptions.sourcemap ?? true,
-    typescript: {
-      ...migratedOptions.typescript,
-      declaration: undefined,
-    },
-    ...transform,
-  };
+  if (transformOptions !== false) {
+    transformOptions = {
+      ...migratedOptions,
+      sourcemap: migratedOptions.sourcemap ?? true,
+      typescript: {
+        ...migratedOptions.typescript,
+        declaration: undefined,
+      },
+      ...transform,
+    };
+  }
   const declarationOptions = migratedOptions.typescript.declaration;
 
   return {
     name: "oxc",
     resolveId(id: string, importer: string) {
+      if (!resolveOptions) {
+        return null;
+      }
       if (id.startsWith("./") || id.startsWith("../")) {
         const dir = pathResolve(dirname(importer));
         const ext = extname(id);
-        if (resolve.extensions.includes(ext)) {
+        if (resolveOptions.extensions.includes(ext)) {
           id = id.slice(0, -ext.length);
         }
         const resolved = rf.sync(dir, id);
@@ -64,7 +72,7 @@ export default function oxc({
       return null;
     },
     transform(src: string, id: string) {
-      if (!filter(id)) {
+      if (!transformOptions || !filter(id)) {
         return null;
       }
       const { code, map, errors } = transform(id, src, transformOptions);
