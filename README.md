@@ -11,8 +11,20 @@ export default {
   input: "src/index.ts",
   plugins: [
     oxc({
-      declaration: true,
-      declarationMap: true,
+      tsconfigCompilerOptions: {
+        target: "es2021", // oxc's target
+        experimentalDecorators: true, // require `@oxc-project/runtime`
+        useDefineForClassFields: false, // contrary to oxc's assumptions.setPublicClassFields, typescript.removeClassFieldsWithoutInitializer
+        declaration: true, // for d.ts
+        declarationMap: true, // for d.ts.map
+      },
+      minify: true, // preset `oxc-minify` option, pass an object for more options
+      resolve: {
+        // `oxc-resolver` options
+      },
+      transform: {
+        // `oxc-transform` options, overrides tsconfigCompilerOptions migration
+      },
     }),
   ],
   output: [
@@ -23,5 +35,34 @@ export default {
       preserveModules: true,
     },
   ],
+};
+```
+
+Similar within Rolldown:
+
+```ts
+import migrate from "rollup-plugin-oxc/migrate.js";
+
+export default {
+  input: "src/index.ts",
+  output: [
+    {
+      dir: ".",
+      format: "esm",
+      sourcemap: true,
+      preserveModules: true,
+      minify: true,
+    },
+  ],
+  resolve: {
+    extensions: [".ts", ".js", ".tsx", ".jsx", ".mts", ".mjs", ".cts", ".cjs"],
+  },
+  transform: {
+    ...migrate({
+      target: "es2021",
+      experimentalDecorators: true,
+      useDefineForClassFields: false,
+    }),
+  },
 };
 ```

@@ -14,7 +14,7 @@
   },
   "devDependencies": {
     "@types/node": "^24.0.10",
-    "rollup": "^4.44.1",
+    "rollup": "^4.44.2",
     "typescript": "^5.8.3"
   },
   "exports": {
@@ -28,8 +28,18 @@
         "default": "./node/index.js"
       }
     },
+    "./migrate.js": {
+      "import": {
+        "types": "./module/migrate.d.ts",
+        "default": "./module/migrate.js"
+      },
+      "require": {
+        "types": "./node/migrate.d.ts",
+        "default": "./node/migrate.js"
+      }
+    },
     "./package.json": "./package.json",
-    "./*": "./*"
+    "./src/*": "./src/*"
   },
   "files": [
     "module",

@@ -8,8 +8,13 @@ const bundle = await rollup({
   external: ["node:path", ...Object.keys(pkg.dependencies).map((dep) => new RegExp(`^${dep}`))],
   plugins: [
     oxc({
-      declaration: true,
-      declarationMap: true,
+      tsconfigCompilerOptions: {
+        target: "es2021", 
+        experimentalDecorators: true,
+        useDefineForClassFields: true,
+        declaration: true,
+        declarationMap: true,
+      },
     }),
   ],
 });

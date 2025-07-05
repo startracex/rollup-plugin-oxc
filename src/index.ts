@@ -1,37 +1,61 @@
 import { isolatedDeclaration, transform, type TransformOptions } from "oxc-transform";
-import { ResolverFactory } from "oxc-resolver";
-import { dirname, extname, relative, resolve } from "node:path";
+import { type NapiResolveOptions, ResolverFactory } from "oxc-resolver";
+import { dirname, extname, relative, resolve as pathResolve } from "node:path";
 import { createFilter, type FilterPattern } from "@rollup/pluginutils";
 import type { Plugin } from "rollup";
-import { minify } from "oxc-minify";
+import { minify, type MinifyOptions } from "oxc-minify";
+import migrate, { type CompilerOptions } from "./migrate.ts";
 
-export type MigrateOptions = Partial<{
-  extensions: string[];
-  rewriteImportExtensions: boolean;
-  experimentalDecorators: boolean;
-  emitDecoratorMetadata: boolean;
-  declaration: boolean;
-  declarationMap: boolean;
-  target: string;
-  jsx: TransformOptions["jsx"];
-  minify: boolean;
+const defaultMinifyOptions = {
+  sourcemap: true,
+  compress: {
+    keepNames: {
+      function: false,
+      class: true,
+    },
+  },
+} as MinifyOptions;
+
+export type Options = Partial<{
+  tsconfigCompilerOptions: CompilerOptions;
+  transform: TransformOptions;
+  resolve: NapiResolveOptions;
+  minify: boolean | MinifyOptions;
   include: FilterPattern;
   exclude: FilterPattern;
 }>;
 
-export default function oxc({ include, exclude, experimentalDecorators, emitDecoratorMetadata, ...options }: MigrateOptions = {}): Plugin {
+export default function oxc({
+  include,
+  exclude,
+  resolve = {},
+  tsconfigCompilerOptions = {},
+  transform: transformOptions = {},
+  ...options
+}: Options = {}): Plugin {
   const filter = createFilter(include, exclude);
-  options.extensions ??= [".ts", ".js", ".tsx", ".jsx", ".mts", ".mjs", ".cts", ".cjs"];
-  const rf = new ResolverFactory({
-    extensions: options.extensions,
-  });
+
+  resolve.extensions ??= [".ts", ".js", ".tsx", ".jsx", ".mts", ".mjs", ".cts", ".cjs"];
+  const rf = new ResolverFactory(resolve);
+  const migratedOptions = migrate(Object.assign(tsconfigCompilerOptions, options));
+  transformOptions = {
+    ...migratedOptions,
+    sourcemap: migratedOptions.sourcemap ?? true,
+    typescript: {
+      ...migratedOptions.typescript,
+      declaration: undefined,
+    },
+    ...transform,
+  };
+  const declarationOptions = migratedOptions.typescript.declaration;
+
   return {
     name: "oxc",
     resolveId(id: string, importer: string) {
       if (id.startsWith("./") || id.startsWith("../")) {
-        const dir = resolve(dirname(importer));
+        const dir = pathResolve(dirname(importer));
         const ext = extname(id);
-        if (options.extensions.includes(ext)) {
+        if (resolve.extensions.includes(ext)) {
           id = id.slice(0, -ext.length);
         }
         const resolved = rf.sync(dir, id);
@@ -43,43 +67,28 @@ export default function oxc({ include, exclude, experimentalDecorators, emitDeco
       if (!filter(id)) {
         return null;
       }
-      const emitDecorator = experimentalDecorators !== null && experimentalDecorators !== undefined;
-      const { code, map } = transform(id, src, {
-        target: options.target,
-        sourcemap: true,
-        sourceType: "module",
-        assumptions: {
-          setPublicClassFields: true,
-        },
-        jsx: options.jsx,
-        decorator: emitDecorator
-          ? {
-              legacy: experimentalDecorators,
-              emitDecoratorMetadata,
-            }
-          : undefined,
-        typescript: {
-          removeClassFieldsWithoutInitializer: true,
-          rewriteImportExtensions: true,
-        },
-      });
+      const { code, map, errors } = transform(id, src, transformOptions);
+      for (const err of errors) {
+        this.warn(err);
+      }
       return {
         code,
         map,
       };
     },
     async generateBundle({ dir }, bundle) {
-      if (!options.declaration) {
+      if (!declarationOptions) {
         return;
       }
       for (const [fileName, chunk] of Object.entries(bundle)) {
         if (chunk.type === "chunk" && chunk.facadeModuleId) {
-          const rel = relative(resolve(dir, fileName), chunk.facadeModuleId).replaceAll("\\", "/");
+          const rel = relative(pathResolve(dir, fileName), chunk.facadeModuleId).replaceAll("\\", "/");
           const srcBuf = await this.fs.readFile(chunk.facadeModuleId);
 
-          const { code, map } = isolatedDeclaration(rel, srcBuf.toString(), {
-            sourcemap: options.declarationMap,
-          });
+          const { code, map, errors } = isolatedDeclaration(rel, srcBuf.toString(), declarationOptions);
+          for (const err of errors) {
+            this.warn(err);
+          }
 
           const declarationPath = fileName.slice(0, -extname(fileName).length) + ".d.ts";
           this.emitFile({
@@ -87,7 +96,7 @@ export default function oxc({ include, exclude, experimentalDecorators, emitDeco
             fileName: declarationPath,
             source: code,
           });
-          if (options.declarationMap) {
+          if (declarationOptions.sourcemap) {
             map.file = declarationPath;
             this.emitFile({
               type: "asset",
@@ -102,16 +111,7 @@ export default function oxc({ include, exclude, experimentalDecorators, emitDeco
       if (!options.minify) {
         return null;
       }
-      return minify(chunk.fileName, code, {
-        compress: {
-          target: options.target as any,
-          keepNames: {
-            function: false,
-            class: true,
-          },
-        },
-        sourcemap: true,
-      });
+      return minify(chunk.fileName, code, options.minify === true ? defaultMinifyOptions : options.minify);
     },
   };
 }
