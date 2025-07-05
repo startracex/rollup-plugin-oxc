@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "skipLibCheck": true,
+    "moduleResolution": "NodeNext",
+    "module": "NodeNext",
+    "isolatedDeclarations": true,
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "declaration": true,
+    "sourceMap": true,
+    "noEmit": true
+  },
+  "include": ["src", "build.ts"],
+  "exclude": []
+}

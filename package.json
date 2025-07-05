@@ -1,0 +1,40 @@
+{
+  "name": "rollup-plugin-oxc",
+  "version": "0.0.0",
+  "description": "A Rollup plugin to transform TypeScript and generate type declarations with oxc-transform.",
+  "type": "module",
+  "scripts": {
+    "build": "node build.ts"
+  },
+  "dependencies": {
+    "@rollup/pluginutils": "^5.2.0",
+    "oxc-resolver": "^11.4.0",
+    "oxc-transform": "^0.75.1"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.10",
+    "rollup": "^4.44.1",
+    "typescript": "^5.8.3"
+  },
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./module/index.d.ts",
+        "default": "./module/index.js"
+      },
+      "require": {
+        "types": "./node/index.d.ts",
+        "default": "./node/index.js"
+      }
+    },
+    "./package.json": "./package.json",
+    "./*": "./*"
+  },
+  "keywords": [
+    "rollup",
+    "plugin",
+    "oxc"
+  ],
+  "author": "startracex",
+  "license": "MIT"
+}
