@@ -17,7 +17,11 @@ export type CompilerOptions = NullableOptions<{
   stripInternal: boolean;
 }>;
 
-const normalizeDeclaration = ({ declaration, declarationMap, stripInternal }: CompilerOptions): IsolatedDeclarationsOptions => {
+const normalizeDeclaration = ({
+  declaration,
+  declarationMap,
+  stripInternal,
+}: Pick<CompilerOptions, "declaration" | "declarationMap" | "stripInternal">): IsolatedDeclarationsOptions => {
   if (declaration) {
     return {
       sourcemap: declarationMap,
@@ -26,7 +30,10 @@ const normalizeDeclaration = ({ declaration, declarationMap, stripInternal }: Co
   }
 };
 
-const normalizeDecorator = ({ experimentalDecorators, emitDecoratorMetadata }: CompilerOptions) => {
+const normalizeDecorator = ({
+  experimentalDecorators,
+  emitDecoratorMetadata,
+}: Pick<CompilerOptions, "experimentalDecorators" | "emitDecoratorMetadata">) => {
   const emitDecorator = experimentalDecorators !== null && experimentalDecorators !== undefined;
   if (emitDecorator) {
     return {
@@ -36,7 +43,12 @@ const normalizeDecorator = ({ experimentalDecorators, emitDecoratorMetadata }: C
   }
 };
 
-const normalizeJSX = ({ jsx, jsxFactory, jsxFragmentFactory, jsxImportSource }: CompilerOptions) => {
+const normalizeJSX = ({
+  jsx,
+  jsxFactory,
+  jsxFragmentFactory,
+  jsxImportSource,
+}: Pick<CompilerOptions, "jsx" | "jsxFactory" | "jsxFragmentFactory" | "jsxImportSource">) => {
   if (!jsx) {
     return;
   }
