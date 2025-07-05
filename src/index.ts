@@ -1,6 +1,6 @@
 import { isolatedDeclaration, transform, type TransformOptions } from "oxc-transform";
 import { type NapiResolveOptions, ResolverFactory } from "oxc-resolver";
-import { dirname, extname, relative, resolve as pathResolve } from "node:path";
+import { dirname, extname, relative, resolve as pathResolve, basename } from "node:path";
 import { createFilter, type FilterPattern } from "@rollup/pluginutils";
 import type { Plugin } from "rollup";
 import { minify, type MinifyOptions } from "oxc-minify";
@@ -23,12 +23,24 @@ const emitDts = ({ code, map, fileName, emitFile }) => {
     source: code,
   });
   if (map) {
-    map.file = fileName;
+    map.file = basename(fileName);
     emitFile({
       type: "asset",
       fileName: `${fileName}.map`,
       source: JSON.stringify(map),
     });
+  }
+};
+
+const isTsExt = (ext: string) => {
+  switch (ext) {
+    case ".ts":
+    case ".tsx":
+    case ".mts":
+    case ".cts":
+      return true;
+    default:
+      return false;
   }
 };
 
@@ -105,6 +117,10 @@ export default function oxc({
       }
       for (const [fileName, chunk] of Object.entries(bundle)) {
         if (chunk.type === "chunk" && chunk.facadeModuleId) {
+          const srcExt = extname(chunk.facadeModuleId);
+          if (!isTsExt(srcExt)) {
+            continue;
+          }
           const rel = relative(pathResolve(dir, fileName), chunk.facadeModuleId).replaceAll("\\", "/");
           const srcBuf = await this.fs.readFile(chunk.facadeModuleId);
 
@@ -113,7 +129,8 @@ export default function oxc({
             this.warn(err);
           }
 
-          const declarationPath = fileName.slice(0, -extname(fileName).length) + ".d.ts";
+          let dtsExt = srcExt === ".tsx" ? ".ts" : srcExt;
+          const declarationPath = `${fileName.slice(0, -extname(fileName).length)}.d${dtsExt}`;
           emitDts({ code, map, fileName: declarationPath, emitFile: this.emitFile });
         }
       }
