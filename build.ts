@@ -9,9 +9,8 @@ const bundle = await rollup({
   plugins: [
     oxc({
       tsconfigCompilerOptions: {
-        target: "es2021", 
+        target: "es2021",
         experimentalDecorators: true,
-        useDefineForClassFields: true,
         declaration: true,
         declarationMap: true,
       },
@@ -23,12 +22,12 @@ await bundle.write({
   dir: "module",
   format: "esm",
   sourcemap: true,
-  preserveModules:true,
+  preserveModules: true,
 });
 
 await bundle.write({
   dir: "node",
   format: "cjs",
   sourcemap: true,
-  preserveModules:true,
+  preserveModules: true,
 });
