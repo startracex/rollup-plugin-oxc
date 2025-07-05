@@ -16,6 +16,22 @@ const defaultMinifyOptions = {
   },
 } as MinifyOptions;
 
+const emitDts = ({ code, map, fileName, emitFile }) => {
+  emitFile({
+    type: "asset",
+    fileName,
+    source: code,
+  });
+  if (map) {
+    map.file = fileName;
+    emitFile({
+      type: "asset",
+      fileName: `${fileName}.map`,
+      source: JSON.stringify(map),
+    });
+  }
+};
+
 export type Options = Partial<{
   tsconfigCompilerOptions: CompilerOptions;
   transform: false | TransformOptions;
@@ -53,7 +69,6 @@ export default function oxc({
     };
   }
   const declarationOptions = migratedOptions.typescript.declaration;
-
   return {
     name: "oxc",
     resolveId(id: string, importer: string) {
@@ -99,19 +114,7 @@ export default function oxc({
           }
 
           const declarationPath = fileName.slice(0, -extname(fileName).length) + ".d.ts";
-          this.emitFile({
-            type: "asset",
-            fileName: declarationPath,
-            source: code,
-          });
-          if (declarationOptions.sourcemap) {
-            map.file = declarationPath;
-            this.emitFile({
-              type: "asset",
-              fileName: `${declarationPath}.map`,
-              source: JSON.stringify(map),
-            });
-          }
+          emitDts({ code, map, fileName: declarationPath, emitFile: this.emitFile });
         }
       }
     },
