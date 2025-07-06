@@ -81,6 +81,7 @@ export default function oxc({
     };
   }
   const declarationOptions = migratedOptions.typescript.declaration;
+  const declarationCache = new Set<string>();
   return {
     name: "oxc",
     resolveId(id: string, importer: string) {
@@ -121,6 +122,14 @@ export default function oxc({
           if (!isTsExt(srcExt)) {
             continue;
           }
+          let dtsExt = srcExt === ".tsx" ? ".ts" : srcExt;
+          const declarationPath = `${fileName.slice(0, -extname(fileName).length)}.d${dtsExt}`;
+
+          if (declarationCache.has(declarationPath)) {
+            continue;
+          }
+          declarationCache.add(declarationPath);
+
           const rel = relative(pathResolve(dir, fileName), chunk.facadeModuleId).replaceAll("\\", "/");
           const srcBuf = await this.fs.readFile(chunk.facadeModuleId);
 
@@ -129,8 +138,6 @@ export default function oxc({
             this.warn(err);
           }
 
-          let dtsExt = srcExt === ".tsx" ? ".ts" : srcExt;
-          const declarationPath = `${fileName.slice(0, -extname(fileName).length)}.d${dtsExt}`;
           emitDts({ code, map, fileName: declarationPath, emitFile: this.emitFile });
         }
       }
