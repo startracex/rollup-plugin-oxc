@@ -1,4 +1,4 @@
-import type { IsolatedDeclarationsOptions, TransformOptions } from "oxc-transform";
+import type { DecoratorOptions, IsolatedDeclarationsOptions, JsxOptions, TransformOptions } from "oxc-transform";
 
 type NullableOptions<T> = { [P in keyof T]?: T[P] | null };
 
@@ -33,7 +33,7 @@ const normalizeDeclaration = ({
 const normalizeDecorator = ({
   experimentalDecorators,
   emitDecoratorMetadata,
-}: Pick<CompilerOptions, "experimentalDecorators" | "emitDecoratorMetadata">) => {
+}: Pick<CompilerOptions, "experimentalDecorators" | "emitDecoratorMetadata">): DecoratorOptions | undefined => {
   const emitDecorator = experimentalDecorators !== null && experimentalDecorators !== undefined;
   if (emitDecorator) {
     return {
@@ -48,14 +48,15 @@ const normalizeJSX = ({
   jsxFactory,
   jsxFragmentFactory,
   jsxImportSource,
-}: Pick<CompilerOptions, "jsx" | "jsxFactory" | "jsxFragmentFactory" | "jsxImportSource">) => {
+}: Pick<CompilerOptions, "jsx" | "jsxFactory" | "jsxFragmentFactory" | "jsxImportSource">): "preserve" | JsxOptions | undefined => {
   if (!jsx) {
     return;
   }
-  if (jsx === "preserve") {
-    return jsx;
+  if (jsx === "preserve" || jsx === "react-native") {
+    return "preserve";
   }
   return {
+    runtime: jsx === "react" ? "classic" : "automatic",
     importSource: jsxImportSource,
     pragmaFrag: jsxFragmentFactory,
     pragma: jsxFactory,
