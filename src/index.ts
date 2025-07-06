@@ -1,6 +1,6 @@
 import { isolatedDeclaration, transform, type TransformOptions } from "oxc-transform";
 import { type NapiResolveOptions, ResolverFactory } from "oxc-resolver";
-import { dirname, extname, relative, resolve as pathResolve, basename } from "node:path";
+import { dirname, extname, relative, resolve as pathResolve, basename, join } from "node:path";
 import { createFilter, type FilterPattern } from "@rollup/pluginutils";
 import type { Plugin } from "rollup";
 import { minify, type MinifyOptions } from "oxc-minify";
@@ -133,11 +133,12 @@ export default function oxc({
         const dtsExt = `.d${srcExt === ".tsx" ? ".ts" : srcExt}`;
         const declarationPath = `${fileName.slice(0, -extname(fileName).length)}${dtsExt}`;
 
-        if (declarationCache.has(declarationPath)) {
+        const assertPath = join(dir, declarationPath);
+        if (declarationCache.has(assertPath)) {
           continue;
         }
 
-        declarationCache.add(declarationPath);
+        declarationCache.add(assertPath);
         const rel = relative(pathResolve(dir, fileName), chunk.facadeModuleId).replaceAll("\\", "/");
         const srcBuf = await this.fs.readFile(chunk.facadeModuleId);
 
