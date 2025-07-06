@@ -80,7 +80,7 @@ export default function oxc({
         ...migratedOptions.typescript,
         declaration: undefined,
       },
-      ...transform,
+      ...transformOptions,
     };
   }
   if (minifyOptions === true) {
