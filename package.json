@@ -20,24 +20,12 @@
   },
   "exports": {
     ".": {
-      "import": {
-        "types": "./module/index.d.ts",
-        "default": "./module/index.js"
-      },
-      "require": {
-        "types": "./node/index.d.ts",
-        "default": "./node/index.js"
-      }
+      "import": "./module/index.js",
+      "require": "./node/index.js"
     },
     "./migrate.js": {
-      "import": {
-        "types": "./module/migrate.d.ts",
-        "default": "./module/migrate.js"
-      },
-      "require": {
-        "types": "./node/migrate.d.ts",
-        "default": "./node/migrate.js"
-      }
+      "import": "./module/migrate.js",
+      "require": "./node/migrate.js"
     },
     "./package.json": "./package.json",
     "./src/*": "./src/*"
