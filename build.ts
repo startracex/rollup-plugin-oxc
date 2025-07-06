@@ -4,7 +4,7 @@ import { rollup } from "rollup";
 import pkg from "./package.json" with { type: "json" };
 
 const bundle = await rollup({
-  input: "src/index.ts",
+  input: ["src/index.ts", "src/migrate.ts"],
   external: ["node:path", ...Object.keys(pkg.dependencies).map((dep) => new RegExp(`^${dep}`))],
   plugins: [
     oxc({
