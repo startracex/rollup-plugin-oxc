@@ -69,6 +69,9 @@ export default function oxc({
   }
 
   const migratedOptions = migrate(tsconfigCompilerOptions);
+  const declarationCache = new Set<string>();
+  const declarationOptions =
+    migratedOptions.typescript.declaration ?? (transformOptions ? transformOptions.typescript?.declaration : undefined);
   if (transformOptions !== false) {
     transformOptions = {
       ...migratedOptions,
@@ -80,8 +83,9 @@ export default function oxc({
       ...transform,
     };
   }
-  const declarationOptions = migratedOptions.typescript.declaration;
-  const declarationCache = new Set<string>();
+  if (minifyOptions === true) {
+    minifyOptions = defaultMinifyOptions;
+  }
   return {
     name: "oxc",
     resolveId(id: string, importer?: string) {
@@ -117,36 +121,39 @@ export default function oxc({
         return;
       }
       for (const [fileName, chunk] of Object.entries(bundle)) {
-        if (chunk.type === "chunk" && chunk.facadeModuleId) {
-          const srcExt = extname(chunk.facadeModuleId);
-          if (!isTsExt(srcExt)) {
-            continue;
-          }
-          let dtsExt = srcExt === ".tsx" ? ".ts" : srcExt;
-          const declarationPath = `${fileName.slice(0, -extname(fileName).length)}.d${dtsExt}`;
-
-          if (declarationCache.has(declarationPath)) {
-            continue;
-          }
-          declarationCache.add(declarationPath);
-
-          const rel = relative(pathResolve(dir, fileName), chunk.facadeModuleId).replaceAll("\\", "/");
-          const srcBuf = await this.fs.readFile(chunk.facadeModuleId);
-
-          const { code, map, errors } = isolatedDeclaration(rel, srcBuf.toString(), declarationOptions);
-          for (const err of errors) {
-            this.warn(err);
-          }
-
-          emitDts({ code, map, fileName: declarationPath, emitFile: this.emitFile });
+        if (chunk.type !== "chunk" || !chunk.facadeModuleId) {
+          continue;
         }
+
+        const srcExt = extname(chunk.facadeModuleId);
+        if (!isTsExt(srcExt)) {
+          continue;
+        }
+
+        const dtsExt = `.d${srcExt === ".tsx" ? ".ts" : srcExt}`;
+        const declarationPath = `${fileName.slice(0, -extname(fileName).length)}${dtsExt}`;
+
+        if (declarationCache.has(declarationPath)) {
+          continue;
+        }
+
+        declarationCache.add(declarationPath);
+        const rel = relative(pathResolve(dir, fileName), chunk.facadeModuleId).replaceAll("\\", "/");
+        const srcBuf = await this.fs.readFile(chunk.facadeModuleId);
+
+        const { code, map, errors } = isolatedDeclaration(rel, srcBuf.toString(), declarationOptions);
+        for (const err of errors) {
+          this.warn(err);
+        }
+
+        emitDts({ code, map, fileName: declarationPath, emitFile: this.emitFile });
       }
     },
     renderChunk(code, chunk) {
       if (!minifyOptions) {
         return null;
       }
-      return minify(chunk.fileName, code, minifyOptions === true ? defaultMinifyOptions : minifyOptions);
+      return minify(chunk.fileName, code, minifyOptions);
     },
   };
 }
