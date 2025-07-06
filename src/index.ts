@@ -59,7 +59,7 @@ export default function oxc({
   resolve: resolveOptions = {},
   tsconfigCompilerOptions = {},
   transform: transformOptions = {},
-  ...options
+  minify: minifyOptions,
 }: Options = {}): Plugin {
   const filter = createFilter(include, exclude);
   let rf: ResolverFactory;
@@ -68,7 +68,7 @@ export default function oxc({
     rf = new ResolverFactory(resolveOptions);
   }
 
-  const migratedOptions = migrate(Object.assign(tsconfigCompilerOptions, options));
+  const migratedOptions = migrate(tsconfigCompilerOptions);
   if (transformOptions !== false) {
     transformOptions = {
       ...migratedOptions,
@@ -143,10 +143,10 @@ export default function oxc({
       }
     },
     renderChunk(code, chunk) {
-      if (!options.minify) {
+      if (!minifyOptions) {
         return null;
       }
-      return minify(chunk.fileName, code, options.minify === true ? defaultMinifyOptions : options.minify);
+      return minify(chunk.fileName, code, minifyOptions === true ? defaultMinifyOptions : minifyOptions);
     },
   };
 }
