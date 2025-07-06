@@ -41,7 +41,7 @@ export default {
 Similar within Rolldown:
 
 ```ts
-import migrate from "rollup-plugin-oxc/migrate.js";
+import migrate from "tsconfig-migrate/oxc.js";
 
 export default {
   input: "src/index.ts",

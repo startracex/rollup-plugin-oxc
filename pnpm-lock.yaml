@@ -20,6 +20,9 @@ importers:
       oxc-transform:
         specifier: ^0.75.1
         version: 0.75.1
+      tsconfig-migrate:
+        specifier: ^0.0.0
+        version: 0.0.0
     devDependencies:
       '@types/node':
         specifier: ^24.0.10
@@ -434,6 +437,9 @@ packages:
     engines: {node: '>=18.0.0', npm: '>=8.0.0'}
     hasBin: true
 
+  tsconfig-migrate@0.0.0:
+    resolution: {integrity: sha512-DdF06udF3tEwC3v+ZptvrlXyQ8dzoTER4CBGurPSSF1YoxYSui/bNakUkywnc5XN3JYaregn5iSnCa5cfztwJw==}
+
   tslib@2.8.1:
     resolution: {integrity: sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==}
 
@@ -768,6 +774,8 @@ snapshots:
       '@rollup/rollup-win32-ia32-msvc': 4.44.2
       '@rollup/rollup-win32-x64-msvc': 4.44.2
       fsevents: 2.3.3
+
+  tsconfig-migrate@0.0.0: {}
 
   tslib@2.8.1:
     optional: true
