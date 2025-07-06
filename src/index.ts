@@ -84,12 +84,12 @@ export default function oxc({
   const declarationCache = new Set<string>();
   return {
     name: "oxc",
-    resolveId(id: string, importer: string) {
+    resolveId(id: string, importer?: string) {
       if (!resolveOptions) {
         return null;
       }
       if (id.startsWith("./") || id.startsWith("../")) {
-        const dir = pathResolve(dirname(importer));
+        const dir = importer ? pathResolve(dirname(importer)) : process.cwd();
         const ext = extname(id);
         if (resolveOptions.extensions.includes(ext)) {
           id = id.slice(0, -ext.length);
