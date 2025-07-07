@@ -2,7 +2,7 @@ import { isolatedDeclaration, transform, type TransformOptions } from "oxc-trans
 import { type NapiResolveOptions, ResolverFactory } from "oxc-resolver";
 import { dirname, extname, relative, resolve as pathResolve, basename, join } from "node:path";
 import { createFilter, type FilterPattern } from "@rollup/pluginutils";
-import type { Plugin } from "rollup";
+import type { Plugin, RollupFsModule } from "rollup";
 import { minify, type MinifyOptions } from "oxc-minify";
 import migrate, { type CompilerOptions } from "./migrate.ts";
 
@@ -51,6 +51,8 @@ export type Options = Partial<{
   minify: boolean | MinifyOptions;
   include: FilterPattern;
   exclude: FilterPattern;
+  // @internal for @godown/cli
+  _fs: Partial<RollupFsModule>;
 }>;
 
 export default function oxc({
@@ -59,6 +61,7 @@ export default function oxc({
   resolve: resolveOptions = {},
   tsconfigCompilerOptions = {},
   transform: transformOptions = {},
+  _fs: fs = {},
   minify: minifyOptions,
 }: Options = {}): Plugin {
   const filter = createFilter(include, exclude);
@@ -67,7 +70,6 @@ export default function oxc({
     resolveOptions.extensions ??= [".ts", ".js", ".tsx", ".jsx", ".mts", ".mjs", ".cts", ".cjs"];
     rf = new ResolverFactory(resolveOptions);
   }
-
   const migratedOptions = migrate(tsconfigCompilerOptions);
   const declarationCache = new Set<string>();
   const declarationOptions =
@@ -140,7 +142,8 @@ export default function oxc({
 
         declarationCache.add(assertPath);
         const rel = relative(pathResolve(dir, fileName), chunk.facadeModuleId).replaceAll("\\", "/");
-        const srcBuf = await this.fs.readFile(chunk.facadeModuleId);
+        const readFile = fs.readFile ?? this.fs.readFile;
+        const srcBuf = await readFile(chunk.facadeModuleId);
 
         const { code, map, errors } = isolatedDeclaration(rel, srcBuf.toString(), declarationOptions);
         for (const err of errors) {
