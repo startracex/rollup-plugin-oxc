@@ -19,14 +19,14 @@ const bundle = await rollup({
 });
 
 await bundle.write({
-  dir: "module",
+  dir: "dist/module",
   format: "esm",
   sourcemap: true,
   preserveModules: true,
 });
 
 await bundle.write({
-  dir: "node",
+  dir: "dist/node",
   format: "cjs",
   sourcemap: true,
   preserveModules: true,

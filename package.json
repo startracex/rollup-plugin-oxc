@@ -20,19 +20,19 @@
   },
   "exports": {
     ".": {
-      "import": "./module/index.js",
-      "require": "./node/index.js"
+      "import": "./dist/module/index.js",
+      "require": "./dist/node/index.js"
     },
     "./migrate.js": {
-      "import": "./module/migrate.js",
-      "require": "./node/migrate.js"
+      "import": "./dist/module/migrate.js",
+      "require": "./dist/node/migrate.js"
     },
     "./package.json": "./package.json",
     "./src/*": "./src/*"
   },
   "files": [
-    "module",
-    "node",
+    "dist",
+    "src",
     "package.json"
   ],
   "keywords": [
