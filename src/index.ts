@@ -117,7 +117,7 @@ export default function oxc({
       };
     },
     async generateBundle({ dir }, bundle) {
-      if (!declarationOptions) {
+      if (!dir || !declarationOptions) {
         return;
       }
       for (const [fileName, chunk] of Object.entries(bundle)) {
