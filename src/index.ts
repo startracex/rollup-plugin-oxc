@@ -51,8 +51,10 @@ export type Options = Partial<{
   minify: boolean | MinifyOptions;
   include: FilterPattern;
   exclude: FilterPattern;
-  // @internal for @godown/cli
+  // @internal
   _fs: Partial<RollupFsModule>;
+  // @internal
+  _shouldResolve: (id: string, importer: string) => boolean;
 }>;
 
 export default function oxc({
@@ -62,6 +64,7 @@ export default function oxc({
   tsconfigCompilerOptions = {},
   transform: transformOptions = {},
   _fs: fs = {},
+  _shouldResolve = (id) => id.startsWith("./") || id.startsWith("../"),
   minify: minifyOptions,
 }: Options = {}): Plugin {
   const filter = createFilter(include, exclude);
@@ -94,7 +97,7 @@ export default function oxc({
       if (!resolveOptions) {
         return null;
       }
-      if (id.startsWith("./") || id.startsWith("../")) {
+      if (_shouldResolve(id, importer)) {
         const dir = importer ? pathResolve(dirname(importer)) : process.cwd();
         const ext = extname(id);
         if (resolveOptions.extensions.includes(ext)) {
