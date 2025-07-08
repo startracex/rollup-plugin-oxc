@@ -64,7 +64,7 @@ export default function oxc({
   tsconfigCompilerOptions = {},
   transform: transformOptions = {},
   _fs: fs = {},
-  _shouldResolve = (id) => id.startsWith("./") || id.startsWith("../"),
+  _shouldResolve = () => true,
   minify: minifyOptions,
 }: Options = {}): Plugin {
   const filter = createFilter(include, exclude);
