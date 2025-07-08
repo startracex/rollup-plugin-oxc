@@ -70,7 +70,7 @@ export default function oxc({
   const filter = createFilter(include, exclude);
   let rf: ResolverFactory;
   if (resolveOptions !== false) {
-    resolveOptions.extensions ??= [".ts", ".js", ".tsx", ".jsx", ".mts", ".mjs", ".cts", ".cjs"];
+    resolveOptions.extensions ??= [".ts", ".js", ".json", ".tsx", ".jsx", ".mts", ".mjs", ".cts", ".cjs"];
     rf = new ResolverFactory(resolveOptions);
   }
   const migratedOptions = migrate(tsconfigCompilerOptions);
