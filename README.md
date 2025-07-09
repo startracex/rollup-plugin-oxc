@@ -1,10 +1,10 @@
 # rollup-plugin-oxc
 
-A Rollup plugin to transform, minify TypeScript and generate type declarations with oxc.
+A Rollup plugin to resolve, transform, minify TypeScript and generate type declarations with oxc.
 
-Usage:
+## Usage
 
-```ts
+```js
 import oxc from "rollup-plugin-oxc";
 
 export default {
@@ -38,10 +38,36 @@ export default {
 };
 ```
 
-Similar within Rolldown:
+## Interchangeable
 
-```ts
-import migrate from "tsconfig-migrate/oxc.js";
+These Rollup plugins can be replaced.
+
+- Module resolvers e.g., `@rollup/plugin-node-resolve`
+- Transformers e.g., `@rollup/plugin-typescript`
+- Compressors e.g., `@rollup/plugin-terser`
+
+```js
+import nodeResolve from "@rollup/plugin-typescript";
+import typescript from "@rollup/plugin-typescript";
+import terser from "@rollup/plugin-terser";
+
+export default {
+  plugins: [nodeResolve(), typescript(), terser()],
+};
+```
+
+```js
+import oxc from "rollup-plugin-oxc";
+
+export default {
+  plugins: [oxc()],
+};
+```
+
+In Rolldown, this plugin can be removed.
+
+```js
+import migrate from "rollup-plugin-oxc/migrate.js";
 
 export default {
   input: "src/index.ts",
@@ -54,9 +80,6 @@ export default {
       minify: true,
     },
   ],
-  resolve: {
-    extensions: [".ts", ".js", ".tsx", ".jsx", ".mts", ".mjs", ".cts", ".cjs"],
-  },
   transform: {
     ...migrate({
       target: "es2021",

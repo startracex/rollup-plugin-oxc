@@ -1,2 +1,6 @@
 export { default } from "tsconfig-migrate/oxc.js";
-export type { CompilerOptions } from "tsconfig-migrate/loose-types.js";
+import type { CompilerOptions as LooseType} from "tsconfig-migrate/loose-types.js";
+
+export interface CompilerOptions extends LooseType {
+  customConditions?: string[];
+}

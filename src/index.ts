@@ -1,12 +1,12 @@
-import { isolatedDeclaration, transform, type TransformOptions } from "oxc-transform";
+import { isolatedDeclaration, transform, type SourceMap, type TransformOptions } from "oxc-transform";
 import { type NapiResolveOptions, ResolverFactory } from "oxc-resolver";
 import { dirname, extname, relative, resolve as pathResolve, basename, join } from "node:path";
 import { createFilter, type FilterPattern } from "@rollup/pluginutils";
-import type { Plugin, RollupFsModule } from "rollup";
+import type { EmitFile, Plugin, RollupFsModule } from "rollup";
 import { minify, type MinifyOptions } from "oxc-minify";
 import migrate, { type CompilerOptions } from "./migrate.ts";
 
-const defaultMinifyOptions = {
+const defaultMinifyOptions: MinifyOptions = {
   sourcemap: true,
   compress: {
     keepNames: {
@@ -14,9 +14,9 @@ const defaultMinifyOptions = {
       class: true,
     },
   },
-} as MinifyOptions;
+};
 
-const emitDts = ({ code, map, fileName, emitFile }) => {
+const emitDts = ({ code, map, fileName, emitFile }: { code: string; map: SourceMap; fileName: string; emitFile: EmitFile }): void => {
   emitFile({
     type: "asset",
     fileName,
@@ -32,7 +32,7 @@ const emitDts = ({ code, map, fileName, emitFile }) => {
   }
 };
 
-const isTsExt = (ext: string) => {
+const isTsExt = (ext: string): boolean => {
   switch (ext) {
     case ".ts":
     case ".tsx":
@@ -44,11 +44,7 @@ const isTsExt = (ext: string) => {
   }
 };
 
-const getConditions = (
-  c: CompilerOptions & {
-    customConditions?: string[];
-  }
-) => {
+const getConditions = (c: CompilerOptions): string[] => {
   const conditions = new Set(c.customConditions?.reverse());
   conditions.delete("types");
   if (c.module === "commonjs") {
@@ -62,20 +58,43 @@ const getConditions = (
   return [...conditions].reverse().concat("default");
 };
 
-const getMainFields = (c: { module?: string }) => {
+const getMainFields = (c: { module?: string }): string[] => {
   return c.module === "commonjs" ? ["main"] : ["module", "main"];
 };
 
 const defaultExtensions = [".ts", ".js", ".json", ".tsx", ".jsx", ".mts", ".mjs", ".cts", ".cjs"];
 
 export type Options = Partial<{
-  tsconfigCompilerOptions: CompilerOptions & {
-    customConditions?: string[];
-  };
+  /**
+   * tsconfog compiler options
+   */
+  tsconfigCompilerOptions: CompilerOptions;
+  /**
+   * oxc-transform options.
+   *
+   * If `false`, disable transform.
+   */
   transform: false | TransformOptions;
+  /**
+   * oxc-resolve options.
+   *
+   * If `false`, disable module resolve.
+   */
   resolve: false | NapiResolveOptions;
+  /**
+   * oxc-minify options.
+   *
+   * If `true`, use default options.
+   * If falsely, disable minify.
+   */
   minify: boolean | MinifyOptions;
+  /**
+   * Include pattern.
+   */
   include: FilterPattern;
+  /**
+   * Exclude pattern.
+   */
   exclude: FilterPattern;
   // @internal
   _fs: Partial<RollupFsModule>;

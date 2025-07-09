@@ -38,7 +38,12 @@
   "keywords": [
     "rollup",
     "plugin",
-    "oxc"
+    "oxc",
+    "transform",
+    "resolve",
+    "minify",
+    "typescript",
+    "dts"
   ],
   "repository": {
     "type": "git",
