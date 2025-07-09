@@ -44,8 +44,33 @@ const isTsExt = (ext: string) => {
   }
 };
 
+const getConditions = (
+  c: CompilerOptions & {
+    customConditions?: string[];
+  }
+) => {
+  const conditions = new Set(c.customConditions?.reverse());
+  conditions.delete("types");
+  if (c.module === "commonjs") {
+    conditions.add("node");
+    conditions.add("require");
+  } else {
+    conditions.add("module");
+    conditions.add("import");
+  }
+  return [...conditions].reverse();
+};
+
+const getMainFields = (c: { module?: string }) => {
+  return c.module === "commonjs" ? ["main"] : ["module", "main"];
+};
+
+const defaultExtensions = [".ts", ".js", ".json", ".tsx", ".jsx", ".mts", ".mjs", ".cts", ".cjs"];
+
 export type Options = Partial<{
-  tsconfigCompilerOptions: CompilerOptions;
+  tsconfigCompilerOptions: CompilerOptions & {
+    customConditions?: string[];
+  };
   transform: false | TransformOptions;
   resolve: false | NapiResolveOptions;
   minify: boolean | MinifyOptions;
@@ -69,11 +94,13 @@ export default function oxc({
 }: Options = {}): Plugin {
   const filter = createFilter(include, exclude);
   let rf: ResolverFactory;
+  const migratedOptions = migrate(tsconfigCompilerOptions);
   if (resolveOptions !== false) {
-    resolveOptions.extensions ??= [".ts", ".js", ".json", ".tsx", ".jsx", ".mts", ".mjs", ".cts", ".cjs"];
+    resolveOptions.extensions ??= defaultExtensions;
+    resolveOptions.conditionNames ??= getConditions(tsconfigCompilerOptions);
+    resolveOptions.mainFields ??= getMainFields(tsconfigCompilerOptions);
     rf = new ResolverFactory(resolveOptions);
   }
-  const migratedOptions = migrate(tsconfigCompilerOptions);
   const declarationCache = new Set<string>();
   const declarationOptions =
     migratedOptions.typescript.declaration ?? (transformOptions ? transformOptions.typescript?.declaration : undefined);
