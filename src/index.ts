@@ -58,7 +58,8 @@ const getConditions = (
     conditions.add("module");
     conditions.add("import");
   }
-  return [...conditions].reverse();
+
+  return [...conditions].reverse().concat("default");
 };
 
 const getMainFields = (c: { module?: string }) => {
@@ -127,10 +128,11 @@ export default function oxc({
       if (_shouldResolve(id, importer)) {
         const dir = importer ? pathResolve(dirname(importer)) : process.cwd();
         const ext = extname(id);
-        if (resolveOptions.extensions.includes(ext)) {
+        let resolved = rf.sync(dir, id);
+        if (!resolved.path && resolveOptions.extensions.includes(ext)) {
           id = id.slice(0, -ext.length);
+          resolved = rf.sync(dir, id);
         }
-        const resolved = rf.sync(dir, id);
         return resolved.path ?? null;
       }
       return null;
