@@ -95,12 +95,14 @@ export default function oxc({
 }: Options = {}): Plugin {
   const filter = createFilter(include, exclude);
   let rf: ResolverFactory;
+  let extensionSet: Set<string>;
   const migratedOptions = migrate(tsconfigCompilerOptions);
   if (resolveOptions !== false) {
     resolveOptions.extensions ??= defaultExtensions;
     resolveOptions.conditionNames ??= getConditions(tsconfigCompilerOptions);
     resolveOptions.mainFields ??= getMainFields(tsconfigCompilerOptions);
     rf = new ResolverFactory(resolveOptions);
+    extensionSet = new Set(resolveOptions.extensions);
   }
   const declarationCache = new Set<string>();
   const declarationOptions =
@@ -129,7 +131,7 @@ export default function oxc({
         const dir = importer ? pathResolve(dirname(importer)) : process.cwd();
         const ext = extname(id);
         let resolved = rf.sync(dir, id);
-        if (!resolved.path && resolveOptions.extensions.includes(ext)) {
+        if (!resolved.path && extensionSet.has(ext)) {
           id = id.slice(0, -ext.length);
           resolved = rf.sync(dir, id);
         }
