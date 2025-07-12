@@ -32,15 +32,14 @@ const emitDts = ({ code, map, fileName, emitFile }: { code: string; map: SourceM
   }
 };
 
-const isTsExt = (ext: string): boolean => {
+const getDtsExt = (ext: string, strict: boolean = true): string | undefined => {
   switch (ext) {
     case ".ts":
-    case ".tsx":
     case ".mts":
     case ".cts":
-      return true;
-    default:
-      return false;
+      return strict ? `.d${ext}` : ".d.ts";
+    case ".tsx":
+      return ".d.tsx";
   }
 };
 
@@ -108,9 +107,9 @@ export default function oxc({
   resolve: resolveOptions = {},
   tsconfigCompilerOptions = {},
   transform: transformOptions = {},
+  minify: minifyOptions,
   _fs: fs = {},
   _shouldResolve = () => true,
-  minify: minifyOptions,
 }: Options = {}): Plugin {
   const filter = createFilter(include, exclude);
   let rf: ResolverFactory;
@@ -180,12 +179,10 @@ export default function oxc({
           continue;
         }
 
-        const srcExt = extname(chunk.facadeModuleId);
-        if (!isTsExt(srcExt)) {
+        const dtsExt = getDtsExt(extname(chunk.facadeModuleId));
+        if (!dtsExt) {
           continue;
         }
-
-        const dtsExt = `.d${srcExt === ".tsx" ? ".ts" : srcExt}`;
         const declarationPath = `${fileName.slice(0, -extname(fileName).length)}${dtsExt}`;
 
         const assertPath = join(dir, declarationPath);
