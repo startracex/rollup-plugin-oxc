@@ -5,6 +5,7 @@ import { createFilter, type FilterPattern } from "@rollup/pluginutils";
 import type { EmitFile, Plugin, RollupFsModule } from "rollup";
 import { minify, type MinifyOptions } from "oxc-minify";
 import migrate, { type CompilerOptions } from "./migrate.ts";
+import { readFile as fsReadFile } from "node:fs/promises";
 
 const defaultMinifyOptions: MinifyOptions = {
   sourcemap: true,
@@ -192,7 +193,11 @@ export default function oxc({
 
         declarationCache.add(assertPath);
         const rel = relative(pathResolve(dir, fileName), chunk.facadeModuleId).replaceAll("\\", "/");
-        const readFile = fs.readFile ?? this.fs.readFile;
+        const readFile =
+          fs.readFile ??
+          this.fs?.readFile ??
+          // in rolldown, `this.fs` is undefined currently, so fallback to `node:fs.readFile`
+          fsReadFile;
         const srcBuf = await readFile(chunk.facadeModuleId);
 
         const { code, map, errors } = isolatedDeclaration(rel, srcBuf.toString(), declarationOptions);
