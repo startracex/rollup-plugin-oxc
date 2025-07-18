@@ -40,7 +40,7 @@ const getDtsExt = (ext: string, strict: boolean = true): string | undefined => {
     case ".cts":
       return strict ? `.d${ext}` : ".d.ts";
     case ".tsx":
-      return ".d.tsx";
+      return ".d.ts";
   }
 };
 
