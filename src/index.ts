@@ -44,22 +44,15 @@ const getDtsExt = (ext: string, strict: boolean = true): string | undefined => {
   }
 };
 
-const getConditions = (c: CompilerOptions): string[] => {
-  const conditions = new Set(c.customConditions?.reverse());
-  conditions.delete("types");
-  if (c.module === "commonjs") {
-    conditions.add("node");
-    conditions.add("require");
-  } else {
-    conditions.add("module");
-    conditions.add("import");
+const getConditions = (m: string): string[] => {
+  if (m === "commonjs") {
+    return ["require", "node"];
   }
-
-  return [...conditions].reverse().concat("default");
+  return ["import", "module"];
 };
 
-const getMainFields = (c: { module?: string }): string[] => {
-  return c.module === "commonjs" ? ["main"] : ["module", "main"];
+const getMainFields = (m: string): string[] => {
+  return m === "commonjs" ? ["main"] : ["module", "main"];
 };
 
 const defaultExtensions = [".ts", ".js", ".json", ".tsx", ".jsx", ".mts", ".mjs", ".cts", ".cjs"];
@@ -118,8 +111,8 @@ export default function oxc({
   const migratedOptions = migrate(tsconfigCompilerOptions);
   if (resolveOptions !== false) {
     resolveOptions.extensions ??= defaultExtensions;
-    resolveOptions.conditionNames ??= getConditions(tsconfigCompilerOptions);
-    resolveOptions.mainFields ??= getMainFields(tsconfigCompilerOptions);
+    resolveOptions.conditionNames ??= getConditions(tsconfigCompilerOptions.module);
+    resolveOptions.mainFields ??= getMainFields(tsconfigCompilerOptions.module);
     rf = new ResolverFactory(resolveOptions);
     extensionSet = new Set(resolveOptions.extensions);
   }
