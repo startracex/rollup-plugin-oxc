@@ -1,11 +1,12 @@
 import { isolatedDeclaration, transform, type SourceMap, type TransformOptions } from "oxc-transform";
-import { type NapiResolveOptions, ResolverFactory } from "oxc-resolver";
+import { type NapiResolveOptions } from "oxc-resolver";
 import { dirname, extname, relative, resolve as pathResolve, basename, join } from "node:path";
 import { createFilter, type FilterPattern } from "@rollup/pluginutils";
 import type { EmitFile, Plugin, RollupFsModule } from "rollup";
 import { minify, type MinifyOptions } from "oxc-minify";
 import migrate, { type CompilerOptions } from "./migrate.ts";
 import { readFile as fsReadFile } from "node:fs/promises";
+import { Resolver } from "./resolver.ts";
 
 const defaultMinifyOptions: MinifyOptions = {
   sourcemap: true,
@@ -43,19 +44,6 @@ const getDtsExt = (ext: string, strict: boolean = true): string | undefined => {
       return ".d.ts";
   }
 };
-
-const getConditions = (m: string): string[] => {
-  if (m === "commonjs") {
-    return ["require", "node"];
-  }
-  return ["import", "module"];
-};
-
-const getMainFields = (m: string): string[] => {
-  return m === "commonjs" ? ["main"] : ["module", "main"];
-};
-
-const defaultExtensions = [".ts", ".js", ".json", ".tsx", ".jsx", ".mts", ".mjs", ".cts", ".cjs"];
 
 export type Options = Partial<{
   /**
@@ -106,17 +94,8 @@ export default function oxc({
   _shouldResolve = () => true,
 }: Options = {}): Plugin {
   const filter = createFilter(include, exclude);
-  let rf: ResolverFactory;
-  let extensionSet: Set<string>;
   const migratedOptions = migrate(tsconfigCompilerOptions);
-  if (resolveOptions !== false) {
-    resolveOptions.extensions ??= defaultExtensions;
-    resolveOptions.conditionNames ??= getConditions(tsconfigCompilerOptions.module);
-    resolveOptions.mainFields ??= getMainFields(tsconfigCompilerOptions.module);
-    resolveOptions.alias ??= tsconfigCompilerOptions.paths;
-    rf = new ResolverFactory(resolveOptions);
-    extensionSet = new Set(resolveOptions.extensions);
-  }
+  const rr = new Resolver(resolveOptions, tsconfigCompilerOptions);
   const declarationCache = new Set<string>();
   const declarationOptions =
     migratedOptions.typescript.declaration ?? (transformOptions ? transformOptions.typescript?.declaration : undefined);
@@ -142,13 +121,7 @@ export default function oxc({
       }
       if (_shouldResolve(id, importer)) {
         const dir = importer ? pathResolve(dirname(importer)) : process.cwd();
-        const ext = extname(id);
-        let resolved = rf.sync(dir, id);
-        if (!resolved.path && extensionSet.has(ext)) {
-          id = id.slice(0, -ext.length);
-          resolved = rf.sync(dir, id);
-        }
-        return resolved.path ?? null;
+        return rr.resolve(id, dir);
       }
       return null;
     },

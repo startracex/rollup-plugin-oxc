@@ -5,12 +5,10 @@ import pkg from "./package.json" with { type: "json" };
 
 const bundle = await rollup({
   input: ["src/index.ts", "src/migrate.ts"],
-  external: ["node:path", ...Object.keys(pkg.dependencies).map((dep) => new RegExp(`^${dep}`))],
+  external: [/^node:/, ...Object.keys(pkg.dependencies).map((dep) => new RegExp(`^${dep}`))],
   plugins: [
     oxc({
       tsconfigCompilerOptions: {
-        target: "es2021",
-        experimentalDecorators: true,
         declaration: true,
         declarationMap: true,
       },

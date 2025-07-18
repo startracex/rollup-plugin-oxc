@@ -9,13 +9,13 @@
   "dependencies": {
     "@rollup/pluginutils": "^5.2.0",
     "oxc-minify": "^0.75.1",
-    "oxc-resolver": "^11.4.0",
+    "oxc-resolver": "^11.5.2",
     "oxc-transform": "^0.75.1",
     "tsconfig-migrate": "^0.0.0"
   },
   "devDependencies": {
-    "@types/node": "^24.0.10",
-    "rollup": "^4.44.2",
+    "@types/node": "^24.0.14",
+    "rollup": "^4.45.1",
     "typescript": "^5.8.3"
   },
   "exports": {
