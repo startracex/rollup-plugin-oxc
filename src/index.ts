@@ -113,6 +113,7 @@ export default function oxc({
     resolveOptions.extensions ??= defaultExtensions;
     resolveOptions.conditionNames ??= getConditions(tsconfigCompilerOptions.module);
     resolveOptions.mainFields ??= getMainFields(tsconfigCompilerOptions.module);
+    resolveOptions.alias ??= tsconfigCompilerOptions.paths;
     rf = new ResolverFactory(resolveOptions);
     extensionSet = new Set(resolveOptions.extensions);
   }
