@@ -8,6 +8,7 @@ import migrate, { type CompilerOptions } from "./migrate.ts";
 import { readFile as fsReadFile } from "node:fs/promises";
 import { Resolver } from "./resolver.ts";
 import { DTS, fixExt, getDtsExt, emitDts } from "./dts.ts";
+import { parse } from "tsconfck";
 
 const defaultMinifyOptions: MinifyOptions = {
   sourcemap: true,
@@ -21,13 +22,22 @@ const defaultMinifyOptions: MinifyOptions = {
 
 export type Options = Partial<{
   /**
+   * tsconfig path or options.
+   */
+  tsconfig:
+    | string
+    | {
+        compilerOptions: CompilerOptions;
+      };
+  /**
    * Promotion of oxc transform's typescript.declaration options.
    *
    * If `false`, disable declaration.
    */
   declaration: boolean | IsolatedDeclarationsOptions;
   /**
-   * tsconfog compiler options
+   * tsconfog compiler options.
+   * @deprecated use `tsconfig.compilerOptions` instead.
    */
   tsconfigCompilerOptions: CompilerOptions;
   /**
@@ -61,17 +71,30 @@ export type Options = Partial<{
   _fs: Partial<RollupFsModule>;
 }>;
 
-export default function oxc({
+export default async function oxc({
+  tsconfig = "tsconfig.json",
   include,
   exclude,
   declaration: declarationOptions,
   resolve: resolveOptions = {},
-  tsconfigCompilerOptions = {},
+  tsconfigCompilerOptions,
   transform: transformOptions = {},
   minify: minifyOptions,
   _fs: fs = {},
-}: Options = {}): Plugin {
+}: Options = {}): Promise<Plugin> {
   const filter = createFilter(include, exclude);
+  if (!tsconfigCompilerOptions) {
+    if (typeof tsconfig === "string") {
+      try {
+        tsconfig = (await parse(tsconfig)).tsconfig as { compilerOptions: CompilerOptions };
+      } catch {
+        tsconfig = {
+          compilerOptions: {},
+        };
+      }
+    }
+    tsconfigCompilerOptions = tsconfig.compilerOptions;
+  }
   const migratedOptions = migrate(tsconfigCompilerOptions);
   const rr = new Resolver(resolveOptions, tsconfigCompilerOptions);
   if (transformOptions !== false) {

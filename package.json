@@ -8,13 +8,14 @@
   },
   "dependencies": {
     "@rollup/pluginutils": "^5.2.0",
-    "oxc-minify": "^0.75.1",
-    "oxc-resolver": "^11.5.2",
-    "oxc-transform": "^0.75.1",
+    "oxc-minify": "^0.77.2",
+    "oxc-resolver": "^11.6.0",
+    "oxc-transform": "^0.77.2",
+    "tsconfck": "^3.1.6",
     "tsconfig-migrate": "^0.0.0"
   },
   "devDependencies": {
-    "@types/node": "^24.0.14",
+    "@types/node": "^24.0.15",
     "rollup": "^4.45.1",
     "typescript": "^5.8.3"
   },
@@ -51,5 +52,5 @@
   },
   "author": "startracex",
   "license": "MIT",
-  "packageManager": "pnpm@10.12.4"
+  "packageManager": "pnpm@10.13.1"
 }

@@ -8,10 +8,7 @@ const bundle = await rollup({
   external: [/^node:/, ...Object.keys(pkg.dependencies).map((dep) => new RegExp(`^${dep}`))],
   plugins: [
     oxc({
-      tsconfigCompilerOptions: {
-        declaration: true,
-        declarationMap: true,
-      },
+      tsconfig: "tsconfig.json",
     }),
   ],
 });

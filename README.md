@@ -18,13 +18,7 @@ export default {
       transform: {
         // `oxc-transform` options, overrides tsconfigCompilerOptions migration
       },
-      tsconfigCompilerOptions: {
-        target: "es2021", // oxc's target
-        experimentalDecorators: true, // require `@oxc-project/runtime`
-        useDefineForClassFields: false, // contrary to oxc's assumptions.setPublicClassFields, typescript.removeClassFieldsWithoutInitializer
-        declaration: true, // for d.ts
-        declarationMap: true, // for d.ts.map
-      },
+      tsconfig: "tsconfig.json", // default, pass string path or object options to migrate
     }),
   ],
   output: [
