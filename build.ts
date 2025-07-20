@@ -7,22 +7,21 @@ const bundle = await rollup({
   input: ["src/index.ts", "src/migrate.ts"],
   external: [/^node:/, ...Object.keys(pkg.dependencies).map((dep) => new RegExp(`^${dep}`))],
   plugins: [
-    oxc({
-      tsconfig: "tsconfig.json",
-    }),
+    oxc(),
   ],
 });
 
 await bundle.write({
-  dir: "dist/module",
+  dir: "build",
   format: "esm",
   sourcemap: true,
   preserveModules: true,
 });
 
 await bundle.write({
-  dir: "dist/node",
+  dir: "build",
   format: "cjs",
   sourcemap: true,
   preserveModules: true,
+  entryFileNames: "[name].cjs",
 });

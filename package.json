@@ -21,18 +21,20 @@
   },
   "exports": {
     ".": {
-      "import": "./dist/module/index.js",
-      "require": "./dist/node/index.js"
+      "import": "./build/index.js",
+      "require": "./build/index.cjs",
+      "types": "./build/index.d.ts"
     },
-    "./migrate.js": {
-      "import": "./dist/module/migrate.js",
-      "require": "./dist/node/migrate.js"
+    "./*.js": {
+      "import": "./build/*.js",
+      "require": "./build/*.cjs",
+      "types": "./build/*.d.ts"
     },
     "./package.json": "./package.json",
     "./src/*": "./src/*"
   },
   "files": [
-    "dist",
+    "build",
     "src",
     "package.json"
   ],
