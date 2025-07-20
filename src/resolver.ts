@@ -32,12 +32,13 @@ export class Resolver {
   options: NapiResolveOptions = {};
   disabled = false;
   factory: ResolverFactory;
+  exts: Set<string>;
 
   /**
    * Only for import requests from ts, consider the ts extensions.
    */
   tsFactory: ResolverFactory;
-  exts: Set<string>;
+  tsExts: Set<string>;
   constructor(ro: false | NapiResolveOptions, co: CompilerOptions = {}) {
     if (ro === false) {
       this.disabled = true;
@@ -54,12 +55,13 @@ export class Resolver {
   }
 
   init(): void {
+    this.exts = new Set(this.options.extensions);
+    this.tsExts = new Set([...tsExtensions, ...(this.options.extensions ?? [...jsExtensions, nodeExtension])]);
     this.factory = new ResolverFactory(this.options);
     this.tsFactory = new ResolverFactory({
       ...this.options,
-      extensions: [...new Set([...tsExtensions, ...(this.options.extensions ?? [...jsExtensions, nodeExtension])])],
+      extensions: [...this.tsExts],
     });
-    this.exts = new Set(this.options.extensions);
   }
 
   resolve(id: string, req: string): string | null {
@@ -69,9 +71,17 @@ export class Resolver {
     const dir = resolve(dirname(req));
     const ext = extname(id);
     const reqExt = extname(req);
-    const factory = isTsExt(reqExt) ? this.tsFactory : this.factory;
+    const { factory, exts } = isTsExt(reqExt)
+      ? {
+          factory: this.tsFactory,
+          exts: this.tsExts,
+        }
+      : {
+          factory: this.factory,
+          exts: this.exts,
+        };
     let resolved = factory.sync(dir, id);
-    if (!resolved.path && this.exts.has(ext)) {
+    if (!resolved.path && exts.has(ext)) {
       id = id.slice(0, -ext.length);
       resolved = factory.sync(dir, id);
     }
