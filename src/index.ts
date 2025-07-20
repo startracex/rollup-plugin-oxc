@@ -1,12 +1,13 @@
-import { isolatedDeclaration, transform, type SourceMap, type TransformOptions } from "oxc-transform";
+import { transform, type IsolatedDeclarationsOptions, type TransformOptions } from "oxc-transform";
 import { type NapiResolveOptions } from "oxc-resolver";
-import { extname, relative, resolve as pathResolve, basename, join } from "node:path";
+import { extname, relative, resolve as pathResolve, join } from "node:path";
 import { createFilter, type FilterPattern } from "@rollup/pluginutils";
-import type { EmitFile, Plugin, RollupFsModule } from "rollup";
+import type { Plugin, RollupFsModule } from "rollup";
 import { minify, type MinifyOptions } from "oxc-minify";
 import migrate, { type CompilerOptions } from "./migrate.ts";
 import { readFile as fsReadFile } from "node:fs/promises";
 import { Resolver } from "./resolver.ts";
+import { DTS, fixExt, getDtsExt, emitDts } from "./dts.ts";
 
 const defaultMinifyOptions: MinifyOptions = {
   sourcemap: true,
@@ -18,34 +19,13 @@ const defaultMinifyOptions: MinifyOptions = {
   },
 };
 
-const emitDts = ({ code, map, fileName, emitFile }: { code: string; map: SourceMap; fileName: string; emitFile: EmitFile }): void => {
-  emitFile({
-    type: "asset",
-    fileName,
-    source: code,
-  });
-  if (map) {
-    map.file = basename(fileName);
-    emitFile({
-      type: "asset",
-      fileName: `${fileName}.map`,
-      source: JSON.stringify(map),
-    });
-  }
-};
-
-const getDtsExt = (ext: string, strict: boolean = true): string | undefined => {
-  switch (ext) {
-    case ".ts":
-    case ".mts":
-    case ".cts":
-      return strict ? `.d${ext}` : ".d.ts";
-    case ".tsx":
-      return ".d.ts";
-  }
-};
-
 export type Options = Partial<{
+  /**
+   * Promotion of oxc transform's typescript.declaration options.
+   *
+   * If `false`, disable declaration.
+   */
+  declaration: boolean | IsolatedDeclarationsOptions;
   /**
    * tsconfog compiler options
    */
@@ -66,7 +46,7 @@ export type Options = Partial<{
    * oxc-minify options.
    *
    * If `true`, use default options.
-   * If falsely, disable minify.
+   * If `false`, disable minify.
    */
   minify: boolean | MinifyOptions;
   /**
@@ -84,6 +64,7 @@ export type Options = Partial<{
 export default function oxc({
   include,
   exclude,
+  declaration: declarationOptions,
   resolve: resolveOptions = {},
   tsconfigCompilerOptions = {},
   transform: transformOptions = {},
@@ -93,9 +74,6 @@ export default function oxc({
   const filter = createFilter(include, exclude);
   const migratedOptions = migrate(tsconfigCompilerOptions);
   const rr = new Resolver(resolveOptions, tsconfigCompilerOptions);
-  const declarationCache = new Set<string>();
-  const declarationOptions =
-    migratedOptions.typescript.declaration ?? (transformOptions ? transformOptions.typescript?.declaration : undefined);
   if (transformOptions !== false) {
     transformOptions = {
       ...migratedOptions,
@@ -110,6 +88,7 @@ export default function oxc({
   if (minifyOptions === true) {
     minifyOptions = defaultMinifyOptions;
   }
+  const dtsFactory = new DTS(declarationOptions ?? (transformOptions || {}).typescript?.declaration, tsconfigCompilerOptions);
   return {
     name: "oxc",
     resolveId(id: string, importer?: string) {
@@ -131,8 +110,8 @@ export default function oxc({
         map,
       };
     },
-    async generateBundle({ dir }, bundle) {
-      if (!dir || !declarationOptions) {
+    async generateBundle({ dir, sourcemap, sourcemapExcludeSources, sourcemapBaseUrl }, bundle) {
+      if (!dir || dtsFactory.disabled) {
         return;
       }
       for (const [fileName, chunk] of Object.entries(bundle)) {
@@ -144,15 +123,15 @@ export default function oxc({
         if (!dtsExt) {
           continue;
         }
-        const declarationPath = `${fileName.slice(0, -extname(fileName).length)}${dtsExt}`;
+        const declarationPath = fixExt(fileName, dtsExt);
 
         const assertPath = join(dir, declarationPath);
-        if (declarationCache.has(assertPath)) {
+        if (dtsFactory.cache.has(assertPath)) {
           continue;
         }
 
-        declarationCache.add(assertPath);
-        const rel = relative(pathResolve(dir, fileName), chunk.facadeModuleId).replaceAll("\\", "/");
+        dtsFactory.cache.add(assertPath);
+        const relativePath = relative(pathResolve(dir, fileName), chunk.facadeModuleId).replaceAll("\\", "/");
         const readFile =
           fs.readFile ??
           this.fs?.readFile ??
@@ -160,12 +139,17 @@ export default function oxc({
           fsReadFile;
         const srcBuf = await readFile(chunk.facadeModuleId);
 
-        const { code, map, errors } = isolatedDeclaration(rel, srcBuf.toString(), declarationOptions);
+        const { code, map, errors } = dtsFactory.getDeclaration(relativePath, srcBuf.toString(), {
+          sourceMap: typeof sourcemap === "boolean" ? sourcemap : undefined,
+          sourceRoot: sourcemapBaseUrl,
+          inlineSources: !sourcemapExcludeSources,
+        });
+
+        emitDts({ code, map, fileName: declarationPath, emitFile: this.emitFile });
+
         for (const err of errors) {
           this.warn(err);
         }
-
-        emitDts({ code, map, fileName: declarationPath, emitFile: this.emitFile });
       }
     },
     renderChunk(code, chunk) {
