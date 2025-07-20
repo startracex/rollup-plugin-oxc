@@ -1,8 +1,17 @@
 import { type NapiResolveOptions, ResolverFactory } from "oxc-resolver";
-import { extname } from "node:path";
+import { dirname, extname, resolve } from "node:path";
 import type { CompilerOptions } from "./migrate.ts";
 
-const defaultExtensions = [".ts", ".js", ".json", ".tsx", ".jsx", ".mts", ".mjs", ".cts", ".cjs"];
+const isTsExt = (ext: string): boolean => {
+  switch (ext) {
+    case ".ts":
+    case ".tsx":
+    case ".mts":
+    case ".cts":
+      return true;
+  }
+  return false;
+};
 
 const getConditions = (m: string): string[] => {
   if (m === "commonjs") {
@@ -15,10 +24,19 @@ const getMainFields = (m: string): string[] => {
   return m === "commonjs" ? ["main"] : ["module", "main"];
 };
 
+const nodeExtension = ".node";
+const jsExtensions = [".js", ".json", ".mjs", ".cjs"];
+const tsExtensions = [".ts", ".js", ".json", ".tsx", ".jsx", ".mts", ".mjs", ".cts", ".cjs"];
+
 export class Resolver {
   options: NapiResolveOptions = {};
   disabled = false;
   factory: ResolverFactory;
+
+  /**
+   * Only for import requests from ts, consider the ts extensions.
+   */
+  tsFactory: ResolverFactory;
   exts: Set<string>;
   constructor(ro: false | NapiResolveOptions, co: CompilerOptions = {}) {
     if (ro === false) {
@@ -26,7 +44,7 @@ export class Resolver {
       return;
     }
     this.options = {
-      extensions: defaultExtensions,
+      extensions: [...jsExtensions, nodeExtension],
       conditionNames: getConditions(co.module),
       mainFields: getMainFields(co.module),
       alias: co.paths,
@@ -37,18 +55,25 @@ export class Resolver {
 
   init(): void {
     this.factory = new ResolverFactory(this.options);
+    this.tsFactory = new ResolverFactory({
+      ...this.options,
+      extensions: [...new Set([...tsExtensions, ...(this.options.extensions ?? [...jsExtensions, nodeExtension])])],
+    });
     this.exts = new Set(this.options.extensions);
   }
 
-  resolve(id: string, dir: string): string | null {
+  resolve(id: string, req: string): string | null {
     if (this.disabled) {
       return null;
     }
+    const dir = resolve(dirname(req));
     const ext = extname(id);
-    let resolved = this.factory.sync(dir, id);
+    const reqExt = extname(req);
+    const factory = isTsExt(reqExt) ? this.tsFactory : this.factory;
+    let resolved = factory.sync(dir, id);
     if (!resolved.path && this.exts.has(ext)) {
       id = id.slice(0, -ext.length);
-      resolved = this.factory.sync(dir, id);
+      resolved = factory.sync(dir, id);
     }
     return resolved.path ?? null;
   }

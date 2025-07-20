@@ -1,6 +1,6 @@
 import { isolatedDeclaration, transform, type SourceMap, type TransformOptions } from "oxc-transform";
 import { type NapiResolveOptions } from "oxc-resolver";
-import { dirname, extname, relative, resolve as pathResolve, basename, join } from "node:path";
+import { extname, relative, resolve as pathResolve, basename, join } from "node:path";
 import { createFilter, type FilterPattern } from "@rollup/pluginutils";
 import type { EmitFile, Plugin, RollupFsModule } from "rollup";
 import { minify, type MinifyOptions } from "oxc-minify";
@@ -79,8 +79,6 @@ export type Options = Partial<{
   exclude: FilterPattern;
   // @internal
   _fs: Partial<RollupFsModule>;
-  // @internal
-  _shouldResolve: (id: string, importer: string) => boolean;
 }>;
 
 export default function oxc({
@@ -91,7 +89,6 @@ export default function oxc({
   transform: transformOptions = {},
   minify: minifyOptions,
   _fs: fs = {},
-  _shouldResolve = () => true,
 }: Options = {}): Plugin {
   const filter = createFilter(include, exclude);
   const migratedOptions = migrate(tsconfigCompilerOptions);
@@ -116,14 +113,10 @@ export default function oxc({
   return {
     name: "oxc",
     resolveId(id: string, importer?: string) {
-      if (!resolveOptions) {
+      if (!importer || id.startsWith("\0")) {
         return null;
       }
-      if (_shouldResolve(id, importer)) {
-        const dir = importer ? pathResolve(dirname(importer)) : process.cwd();
-        return rr.resolve(id, dir);
-      }
-      return null;
+      return rr.resolve(id, importer);
     },
     transform(src: string, id: string) {
       if (!transformOptions || !filter(id)) {
