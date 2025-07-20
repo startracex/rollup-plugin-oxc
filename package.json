@@ -1,6 +1,6 @@
 {
   "name": "rollup-plugin-oxc",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "A Rollup plugin to resolve, transform, minify TypeScript and generate type declarations with oxc.",
   "type": "module",
   "scripts": {
