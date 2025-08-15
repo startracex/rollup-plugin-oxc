@@ -54,5 +54,5 @@
   },
   "author": "startracex",
   "license": "MIT",
-  "packageManager": "pnpm@10.13.1"
+  "packageManager": "pnpm@10.14.0"
 }
