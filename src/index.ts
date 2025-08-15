@@ -138,7 +138,7 @@ export default async function oxc({
         return;
       }
       for (const [fileName, chunk] of Object.entries(bundle)) {
-        if (chunk.type !== "chunk" || !chunk.facadeModuleId) {
+        if (chunk.type !== "chunk" || !chunk.facadeModuleId || !filter(chunk.facadeModuleId)) {
           continue;
         }
 
