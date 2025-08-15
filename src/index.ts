@@ -95,7 +95,7 @@ export default async function oxc({
     }
     tsconfigCompilerOptions = tsconfig.compilerOptions;
   }
-  const migratedOptions = migrate(tsconfigCompilerOptions);
+  const migratedOptions = migrate(tsconfigCompilerOptions ?? {});
   const rr = new Resolver(resolveOptions, tsconfigCompilerOptions);
   if (transformOptions !== false) {
     transformOptions = {
