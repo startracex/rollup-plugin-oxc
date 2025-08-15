@@ -73,7 +73,7 @@ export type Options = Partial<{
 
 export default async function oxc({
   tsconfig = "tsconfig.json",
-  include,
+  include = [/\.(js|mjs|cjs|jsx|ts|mts|cts|tsx)$/],
   exclude,
   declaration: declarationOptions,
   resolve: resolveOptions = {},
