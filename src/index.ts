@@ -127,7 +127,11 @@ export default async function oxc({
       }
       const { code, map, errors } = transform(id, src, transformOptions);
       for (const err of errors) {
-        this.warn(err);
+        this.warn({
+          id,
+          message: err.message,
+          frame: err.codeframe,
+        });
       }
       return {
         code,
@@ -172,7 +176,11 @@ export default async function oxc({
         emitDts({ code, map, fileName: declarationPath, emitFile: this.emitFile });
 
         for (const err of errors) {
-          this.warn(err);
+          this.warn({
+            id: chunk.facadeModuleId,
+            message: err.message,
+            frame: err.codeframe,
+          });
         }
       }
     },
