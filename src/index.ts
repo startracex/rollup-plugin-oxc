@@ -33,6 +33,7 @@ export type Options = Partial<{
    * Promotion of oxc transform's typescript.declaration options.
    *
    * If `false`, disable declaration.
+   * If `true`, resolve from tsconfig.
    */
   declaration: boolean | IsolatedDeclarationsOptions;
   /**
@@ -60,11 +61,11 @@ export type Options = Partial<{
    */
   minify: boolean | MinifyOptions;
   /**
-   * Include pattern.
+   * Include pattern to transform and generate declaration.
    */
   include: FilterPattern;
   /**
-   * Exclude pattern.
+   * Exclude pattern to transform and generate declaration.
    */
   exclude: FilterPattern;
   // @internal
