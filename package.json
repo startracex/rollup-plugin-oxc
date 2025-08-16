@@ -4,7 +4,7 @@
   "description": "A Rollup plugin to resolve, transform, minify TypeScript and generate type declarations with oxc.",
   "type": "module",
   "scripts": {
-    "build": "node build.ts"
+    "build": "rollup -c"
   },
   "dependencies": {
     "@rollup/pluginutils": "^5.2.0",

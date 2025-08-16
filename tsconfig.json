@@ -11,9 +11,8 @@
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "inlineSources": true,
     "noEmit": true
   },
-  "include": ["src", "build.ts"],
+  "include": ["src"],
   "exclude": []
 }
