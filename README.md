@@ -60,8 +60,6 @@ export default {
 In Rolldown, this plugin can be removed.
 
 ```js
-import migrate from "rollup-plugin-oxc/migrate.js";
-
 export default {
   input: "src/index.ts",
   output: [
@@ -76,14 +74,7 @@ export default {
     /* resolve options */
   },
   transform: {
-    ...{
-      /* transform options */
-    },
-    ...migrate({
-      target: "es2021",
-      experimentalDecorators: true,
-      useDefineForClassFields: false,
-    }),
+    /* transform options */
   },
 };
 ```
