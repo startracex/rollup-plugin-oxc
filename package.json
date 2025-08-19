@@ -21,14 +21,14 @@
   },
   "exports": {
     ".": {
+      "types": "./build/index.d.ts",
       "import": "./build/index.js",
-      "require": "./build/index.cjs",
-      "types": "./build/index.d.ts"
+      "require": "./build/index.cjs"
     },
     "./*.js": {
+      "types": "./build/*.d.ts",
       "import": "./build/*.js",
-      "require": "./build/*.cjs",
-      "types": "./build/*.d.ts"
+      "require": "./build/*.cjs"
     },
     "./package.json": "./package.json",
     "./src/*": "./src/*"
