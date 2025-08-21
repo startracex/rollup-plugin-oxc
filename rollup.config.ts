@@ -21,12 +21,14 @@ export default {
       dir: "build",
       format: "esm",
       sourcemap: true,
+      hoistTransitiveImports: false,
     },
     {
       dir: "build",
       format: "cjs",
       sourcemap: true,
       entryFileNames: "[name].cjs",
+      hoistTransitiveImports: false,
     },
   ],
 } satisfies RollupOptions;
