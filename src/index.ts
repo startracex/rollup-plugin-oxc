@@ -12,6 +12,9 @@ import { parse } from "tsconfck";
 
 const defaultMinifyOptions: MinifyOptions = {
   sourcemap: true,
+  mangle: {
+    toplevel: true,
+  },
   compress: {
     keepNames: {
       function: false,
@@ -188,6 +191,7 @@ export default async function oxc({
       if (!minifyOptions) {
         return null;
       }
+      minifyOptions.sourcemap ??= true;
       return minify(chunk.fileName, code, minifyOptions);
     },
   };
