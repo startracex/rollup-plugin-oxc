@@ -30,7 +30,7 @@ export type Options = Partial<{
   tsconfig:
     | string
     | {
-        compilerOptions: CompilerOptions;
+        compilerOptions?: CompilerOptions;
       };
   /**
    * Promotion of oxc transform's typescript.declaration options.
@@ -39,11 +39,6 @@ export type Options = Partial<{
    * If `true`, resolve from tsconfig.
    */
   declaration: boolean | IsolatedDeclarationsOptions;
-  /**
-   * tsconfog compiler options.
-   * @deprecated use `tsconfig.compilerOptions` instead.
-   */
-  tsconfigCompilerOptions: CompilerOptions;
   /**
    * oxc-transform options.
    *
@@ -81,25 +76,22 @@ export default async function oxc({
   exclude,
   declaration: declarationOptions,
   resolve: resolveOptions = {},
-  tsconfigCompilerOptions,
   transform: transformOptions = {},
   minify: minifyOptions,
   _fs: fs = {},
 }: Options = {}): Promise<Plugin> {
   const filter = createFilter(include, exclude);
-  if (!tsconfigCompilerOptions) {
-    if (typeof tsconfig === "string") {
-      try {
-        tsconfig = (await parse(tsconfig)).tsconfig as { compilerOptions: CompilerOptions };
-      } catch {
-        tsconfig = {
-          compilerOptions: {},
-        };
-      }
+  let tsconfigCompilerOptions;
+  if (typeof tsconfig === "string") {
+    try {
+      tsconfig = (await parse(tsconfig)).tsconfig as { compilerOptions: CompilerOptions };
+    } catch {
+      tsconfig = {};
     }
-    tsconfigCompilerOptions = tsconfig.compilerOptions;
   }
-  const migratedOptions = migrate(tsconfigCompilerOptions ?? {});
+  tsconfigCompilerOptions = tsconfig?.compilerOptions ?? {};
+
+  const migratedOptions = migrate(tsconfigCompilerOptions);
   const rr = new Resolver(resolveOptions, tsconfigCompilerOptions);
   if (transformOptions !== false) {
     transformOptions = {
