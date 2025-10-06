@@ -8,11 +8,11 @@
   },
   "dependencies": {
     "@rollup/pluginutils": "^5.2.0",
-    "oxc-minify": "^0.82.3",
+    "oxc-minify": "^0.93.0",
     "oxc-resolver": "^11.6.2",
-    "oxc-transform": "^0.82.3",
+    "oxc-transform": "^0.93.0",
     "tsconfck": "^3.1.6",
-    "tsconfig-migrate": "^0.0.0"
+    "tsconfig-migrate": "^0.1.0"
   },
   "devDependencies": {
     "@types/node": "^24.3.0",
