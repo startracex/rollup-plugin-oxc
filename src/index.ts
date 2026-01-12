@@ -116,11 +116,11 @@ export default async function oxc({
       }
       return rr.resolve(id, importer);
     },
-    transform(src: string, id: string) {
+    async transform(src: string, id: string) {
       if (!transformOptions || !filter(id)) {
         return null;
       }
-      const { code, map, errors } = transform(id, src, transformOptions);
+      const { code, map, errors } = await transform(id, src, transformOptions);
       for (const err of errors) {
         this.warn({
           id,
@@ -162,7 +162,7 @@ export default async function oxc({
           fsReadFile;
         const srcBuf = await readFile(chunk.facadeModuleId);
 
-        const { code, map, errors } = dtsFactory.getDeclaration(relativePath, srcBuf.toString(), {
+        const { code, map, errors } = await dtsFactory.getDeclaration(relativePath, srcBuf.toString(), {
           sourceMap: typeof sourcemap === "boolean" ? sourcemap : undefined,
           sourceRoot: sourcemapBaseUrl,
           inlineSources: !sourcemapExcludeSources,

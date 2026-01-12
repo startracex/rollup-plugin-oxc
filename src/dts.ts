@@ -67,7 +67,7 @@ export class DTS {
     };
   }
 
-  getDeclaration(
+  async getDeclaration(
     fileName: string,
     src: string,
     {
@@ -79,8 +79,8 @@ export class DTS {
       sourceRoot?: string;
       inlineSources?: boolean;
     } = {}
-  ): IsolatedDeclarationsResult {
-    const { code, map, errors } = isolatedDeclaration(fileName, src, {
+  ): Promise<IsolatedDeclarationsResult> {
+    const { code, map, errors } = await isolatedDeclaration(fileName, src, {
       sourcemap: sourceMap,
       stripInternal: this.options.stripInternal,
     });
