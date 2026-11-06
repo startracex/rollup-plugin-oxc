@@ -2,15 +2,15 @@ import { type NapiResolveOptions, ResolverFactory } from "oxc-resolver";
 import { dirname, resolve } from "node:path";
 import type { CompilerOptions } from "./migrate.ts";
 
-const isEqualFoldCommonJS = (m?: string) => {
+const isEqualFoldCommonJS = (m?: string | null) => {
   return m?.toLowerCase() === "commonjs";
 };
 
-const getConditions = (m: string): string[] => {
+const getConditions = (m?: string | null): string[] => {
   return isEqualFoldCommonJS(m) ? ["require"] : ["import", "module"];
 };
 
-const getMainFields = (m: string): string[] => {
+const getMainFields = (m?: string | null): string[] => {
   return isEqualFoldCommonJS(m) ? ["main"] : ["module", "main"];
 };
 
@@ -20,7 +20,7 @@ const tsExtensions = [".ts", ".tsx", ".mts", ".cts"];
 export class Resolver {
   options: NapiResolveOptions = {};
   disabled = false;
-  factory: ResolverFactory;
+  factory!: ResolverFactory;
 
   constructor(ro: false | NapiResolveOptions, co: CompilerOptions = {}) {
     if (ro === false) {

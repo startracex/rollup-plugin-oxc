@@ -81,15 +81,16 @@ export default async function oxc({
   _fs: fs = {},
 }: Options = {}): Promise<Plugin> {
   const filter = createFilter(include, exclude);
-  let tsconfigCompilerOptions;
   if (typeof tsconfig === "string") {
     try {
-      tsconfig = (await parse(tsconfig)).tsconfig as { compilerOptions: CompilerOptions };
+      tsconfig = (await parse(tsconfig)).tsconfig as {
+        compilerOptions: CompilerOptions;
+      };
     } catch {
       tsconfig = {};
     }
   }
-  tsconfigCompilerOptions = tsconfig?.compilerOptions ?? {};
+  const tsconfigCompilerOptions = tsconfig?.compilerOptions ?? {};
 
   const migratedOptions = migrate(tsconfigCompilerOptions);
   const rr = new Resolver(resolveOptions, tsconfigCompilerOptions);
@@ -107,7 +108,10 @@ export default async function oxc({
   if (minifyOptions === true) {
     minifyOptions = defaultMinifyOptions;
   }
-  const dtsFactory = new DTS(declarationOptions ?? (transformOptions || {}).typescript?.declaration, tsconfigCompilerOptions);
+  const dtsFactory = new DTS(
+    declarationOptions ?? (transformOptions || {}).typescript?.declaration ?? true,
+    tsconfigCompilerOptions,
+  );
   return {
     name: "oxc",
     resolveId(id: string, importer?: string) {
@@ -125,7 +129,7 @@ export default async function oxc({
         this.warn({
           id,
           message: err.message,
-          frame: err.codeframe,
+          frame: err.codeframe ?? undefined,
         });
       }
       return {
@@ -154,27 +158,35 @@ export default async function oxc({
         }
 
         dtsFactory.cache.add(assertPath);
-        const relativePath = relative(pathResolve(dir, fileName), chunk.facadeModuleId).replaceAll("\\", "/");
-        const readFile =
-          fs.readFile ??
-          this.fs?.readFile ??
-          // in rolldown, `this.fs` is undefined currently, so fallback to `node:fs.readFile`
-          fsReadFile;
+        const relativePath = relative(pathResolve(dir, fileName), chunk.facadeModuleId).replaceAll(
+          "\\",
+          "/",
+        );
+        const readFile = fs.readFile ?? this.fs?.readFile ?? fsReadFile;
         const srcBuf = await readFile(chunk.facadeModuleId);
 
-        const { code, map, errors } = await dtsFactory.getDeclaration(relativePath, srcBuf.toString(), {
-          sourceMap: typeof sourcemap === "boolean" ? sourcemap : undefined,
-          sourceRoot: sourcemapBaseUrl,
-          inlineSources: !sourcemapExcludeSources,
-        });
+        const { code, map, errors } = await dtsFactory.getDeclaration(
+          relativePath,
+          srcBuf.toString(),
+          {
+            sourceMap: typeof sourcemap === "boolean" ? sourcemap : undefined,
+            sourceRoot: sourcemapBaseUrl,
+            inlineSources: !sourcemapExcludeSources,
+          },
+        );
 
-        emitDts({ code, map, fileName: declarationPath, emitFile: this.emitFile });
+        emitDts({
+          code,
+          map,
+          fileName: declarationPath,
+          emitFile: this.emitFile,
+        });
 
         for (const err of errors) {
           this.warn({
             id: chunk.facadeModuleId,
             message: err.message,
-            frame: err.codeframe,
+            frame: err.codeframe ?? undefined,
           });
         }
       }

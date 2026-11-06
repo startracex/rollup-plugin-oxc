@@ -1,9 +1,14 @@
-import { isolatedDeclaration, type IsolatedDeclarationsOptions, type IsolatedDeclarationsResult, type SourceMap } from "oxc-transform";
+import {
+  isolatedDeclaration,
+  type IsolatedDeclarationsOptions,
+  type IsolatedDeclarationsResult,
+  type SourceMap,
+} from "oxc-transform";
 import type { CompilerOptions } from "./migrate.ts";
 import { basename, extname } from "node:path";
 import type { EmitFile } from "rollup";
 
-export const getDtsExt = (ext: string, strict: boolean = true): string | undefined => {
+export const getDtsExt = (ext: string, strict = true): string | undefined => {
   switch (ext) {
     case ".ts":
     case ".mts":
@@ -25,7 +30,7 @@ export const emitDts = ({
   emitFile,
 }: {
   code: string;
-  map: SourceMap;
+  map?: SourceMap;
   fileName: string;
   emitFile: EmitFile;
 }): void => {
@@ -50,7 +55,7 @@ export class DTS {
   cache: Set<string> = new Set();
   sourceRoot?: string;
   inlineSources?: boolean;
-  constructor(ido: boolean | IsolatedDeclarationsOptions, co: CompilerOptions = {}) {
+  constructor(ido: boolean | IsolatedDeclarationsOptions = true, co: CompilerOptions = {}) {
     if (ido === false) {
       this.disabled = true;
       return;
@@ -58,11 +63,11 @@ export class DTS {
     if (ido === true) {
       ido = {};
     }
-    this.sourceRoot = co.sourceRoot;
-    this.inlineSources = co.inlineSources;
+    this.sourceRoot = co.sourceRoot ?? undefined;
+    this.inlineSources = co.inlineSources ?? undefined;
     this.options = {
-      sourcemap: co.declarationMap,
-      stripInternal: co.stripInternal,
+      sourcemap: co.declarationMap ?? undefined,
+      stripInternal: co.stripInternal ?? undefined,
       ...ido,
     };
   }
@@ -78,17 +83,19 @@ export class DTS {
       sourceMap?: boolean;
       sourceRoot?: string;
       inlineSources?: boolean;
-    } = {}
+    } = {},
   ): Promise<IsolatedDeclarationsResult> {
     const { code, map, errors } = await isolatedDeclaration(fileName, src, {
       sourcemap: sourceMap,
       stripInternal: this.options.stripInternal,
     });
-    if (!inlineSources) {
-      delete map.sourcesContent;
-    }
-    if (sourceRoot === "" || sourceRoot) {
-      map.sourceRoot = sourceRoot;
+    if (map) {
+      if (!inlineSources) {
+        delete map.sourcesContent;
+      }
+      if (sourceRoot === "" || sourceRoot) {
+        map.sourceRoot = sourceRoot;
+      }
     }
     return { code, map, errors };
   }

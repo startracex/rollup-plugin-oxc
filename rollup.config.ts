@@ -9,12 +9,7 @@ export default {
       return [path.slice(4, -3), path];
     }),
   ),
-  external: [
-    /^node:/,
-    ...Object.keys(pkg.dependencies).map((dep) =>
-      new RegExp(`^${dep}($|\/\.*)`)
-    ),
-  ],
+  external: [/^node:/, ...Object.keys(pkg.dependencies).map((dep) => new RegExp(`^${dep}($|/.*)`))],
   plugins: [oxc()],
   output: [
     {
