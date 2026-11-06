@@ -70,11 +70,7 @@ export default {
       minify: true,
     },
   ],
-  resolve: {
-    /* resolve options */
-  },
-  transform: {
-    /* transform options */
-  },
+  resolve: {/* resolve options */},
+  transform: {/* transform options */},
 };
 ```
